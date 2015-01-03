@@ -16,7 +16,8 @@ def parse_main(r):
         cflow = entry.find('span', 'cflow')
         row['title'] = entry.find('b', 'title').text
         row['cash_flow'] = int(cflow.find('b').text.strip('$').replace(',', '')) if cflow else None
-        row['price'] = int(entry.find('span', 'price').text.strip('$').replace(',', ''))
+        price = entry.find('span', 'price')
+        row['price'] = int(price.text.strip('$').replace(',', '')) if price else None
         row['href'] = 'http://www.bizbuysell.com' + entry.attrs['href']
         data.append(row)
     return data

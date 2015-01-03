@@ -16,6 +16,11 @@ def query():
     data = parse_main(r)
     return jsonify({'data': data})
     
+import json
+@app.route('/testq')
+def test_query():
+    data = json.load(open('examples/example_data.json'))
+    return jsonify({'data': data})
 
 if __name__ == '__main__': app.run()
 
