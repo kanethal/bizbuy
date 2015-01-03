@@ -9,33 +9,161 @@
 
         <!-- Place favicon.ico and apple-touch-icon(s) in the root directory -->
 
-        <link rel="stylesheet" href="css/normalize.css">
-        <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="static/css/normalize.css">
+        <link rel="stylesheet" href="static/css/main.css">
         <script src="static/js/vendor/modernizr-2.8.0.min.js"></script>
     </head>
-    <body ng-controller='Main'>
+    <body ng-controller='Main as ctrl'>
+      <h1 class="title">BizBuy</h1>
+      <input type="text" placeholder='max' ng-model='ctrl.cutoff'>
+      <p>{{ctrl.cutoff}}</p>
+      <button ng-click='ctrl.submit()'>Submit</button>
 
 
-
-
-
-
-
-
-        <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
+        <script src="static/js/angular.min.js"></script>
+        <script src="static/js/jquery.min.js"></script>
         <script src="static/js/plugins.js"></script>
         <script src="static/js/main.js"></script>
         <script src="static/js/d3.min.js"></script>
         <script type='text/javascript'>
           angular.module('bizApp', []).controller('Main', ['$http', function($http) {
-            console.log('started')
+
+            console.log('started');
+
             var self=this;
+
                 // Simple GET request example :
             $http.get('/q').
                 success(function(data) {
                 self.bizdata=data;
-              }).
-                error(function() {alert('error retrieving data')
+                g= data.data;
+
+                //User Input
+                self.cutoff = 300000;
+                // self.submit=function(){
+                //   console.log('Max is now '+self.cutoff)
+                // }
+                //create grid
+                margin = 40;
+                grid = {
+                  height:600+margin,
+                  width:900+margin,
+                  maxX: d3.max(g, function(d){
+                    return d.price;
+                  }),
+                  maxY:d3.max(g, function(d){
+                    return d.cash_flow/d.price
+                  }),
+                };
+
+
+                scale= {
+                  x: d3.scale.linear()
+                  .domain([0, self.cutoff])
+                  .range([margin, grid.width-margin]),
+                  y: d3.scale.linear()
+                  .domain([0, grid.maxY])
+                  .range([grid.height-margin, margin])
+                };
+                xpos = function(d){
+                  return scale.x(d.price)
+                };
+
+                ypos = function(d){
+                  return scale.y(d.cash_flow/d.price)
+                };
+
+                rad = function(d){
+                  return Math.sqrt((d.cash_flow/d.price/grid.maxY*grid.height)) +4
+                };
+
+                colorval= function(d){
+                  return d.cash_flow/d.price/grid.maxY
+                };
+
+                color =
+                  d3.scale.linear()
+                  .domain([0,.5,1])
+                  .range(['red','lightblue','lightgreen']);
+
+                var xaxis = d3.svg.axis()
+                  .scale(scale.x)
+                  .orient('bottom')
+                  ;
+
+                var yaxis = d3.svg.axis()
+                  .scale(scale.y)
+                  .orient('left')
+                  ;
+
+
+
+                var svg = d3.select('body')
+                  .append('svg')
+                  .attr('width', grid.width)
+                  .attr('height', grid.height);
+
+                svg.selectAll('circle')
+                  .data(g)
+                  .enter()
+                  .append('circle')
+                  .attr('cx', xpos)
+                  .attr('cy', ypos)
+                  .attr('r', rad)
+                  .attr('stroke', 'black')
+                  .attr('stroke-width','2')
+                  .attr('fill', function(d){
+                    return color(colorval(d));});
+
+                  // svg.selectAll('div.text')
+                  //   .data(g)
+                  //   .enter()
+                  //   .append('div')
+                  //   .append('h2')
+                  //   .text(function(d){
+                  //     return d.title+'\nPrice: '+d.price+'\nCash Flow: '+d.cash_flow
+                  //   })
+                  //   .attr('x',function(d){return xpos(d)-rad(d)})
+                  //   .attr('y',function(d){return ypos(d)-rad(d)})
+                  //   .attr('class','text')
+                  //
+                  //   ;
+
+                  svg.append('g')
+                  .attr('transform','translate(0,'+(grid.height-margin)+')')
+                  .attr('class','axis')
+                  .call(xaxis);
+
+                  svg.append('g')
+                    .attr('transform','translate('+margin+',0)')
+                    .attr('class','axis')
+                    .call(yaxis);
+
+                  // ** Update data section (Called from the onclick)
+
+
+                  // updatedata = function() {
+                  //
+                  //
+                  //
+                  //     // Select the section we want to apply our changes to
+                  //     var svg = d3.select("body").transition();
+                  //
+                  //     // Make the changes
+                  //         svg.selectAll('circle')
+                  //       .data(g)
+                  //       .attr('cx', xpos)
+                  //       .attr('cy', ypos)
+                  //       .attr('r', rad)
+                  //       .attr('stroke', 'black')
+                  //       .attr('stroke-width','2')
+                  //       .attr('fill', function(d){
+                  //         return color(colorval(d));})
+                  //         };
+
+
+              })
+              .error(function() {alert('error retrieving data')
               });
 
 
