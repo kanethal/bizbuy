@@ -14,10 +14,20 @@
         <script src="static/js/vendor/modernizr-2.8.0.min.js"></script>
     </head>
     <body ng-controller='Main as ctrl'>
-      <h1 class="title">BizBuy</h1>
-      <input type="text" placeholder='max' ng-model='ctrl.cutoff'>
-      <p>{{ctrl.cutoff}}</p>
-      <button ng-click='ctrl.submit()'>Submit</button>
+      <h1 class="title" ng-mouseover='ctrl.circleHover()' ng-mousedown='ctrl.circlePress()'>BizBuy</h1>
+
+      <div class='input'>
+        <input type="text" placeholder='min' ng-model='ctrl.min'/>
+        <input type="text" placeholder='max' ng-model='ctrl.cutoff'/>
+        <button ng-click='ctrl.submit()'>Submit</button>
+      </div>
+      <div class="results">
+        <h2 ng-bind="ctrl.title"></h2>
+        <p ng-bind="ctrl.price"></p>
+        <p ng-bind="ctrl.cflow"></p>
+      </div>
+
+
 
 
         <script src="static/js/angular.min.js"></script>
@@ -33,16 +43,16 @@
             var self=this;
 
                 // Simple GET request example :
-            $http.get('/q').
+            $http.get('static/data/data.json').
                 success(function(data) {
                 self.bizdata=data;
                 g= data.data;
 
-                //User Input
+                self.title='Title';
+                self.price='Price';
+                self.cflow='Cash-Flow';
+                self.min = 0;
                 self.cutoff = 300000;
-                // self.submit=function(){
-                //   console.log('Max is now '+self.cutoff)
-                // }
                 //create grid
                 margin = 40;
                 grid = {
@@ -59,12 +69,14 @@
 
                 scale= {
                   x: d3.scale.linear()
-                  .domain([0, self.cutoff])
+                  .domain([self.min, self.cutoff])
                   .range([margin, grid.width-margin]),
                   y: d3.scale.linear()
                   .domain([0, grid.maxY])
                   .range([grid.height-margin, margin])
                 };
+
+
                 xpos = function(d){
                   return scale.x(d.price)
                 };
@@ -98,10 +110,13 @@
 
 
 
-                var svg = d3.select('body')
+                svg = d3.select('body')
                   .append('svg')
                   .attr('width', grid.width)
-                  .attr('height', grid.height);
+                  .attr('height', grid.height)
+                  .attr('class', 'grid');
+
+
 
                 svg.selectAll('circle')
                   .data(g)
@@ -110,56 +125,73 @@
                   .attr('cx', xpos)
                   .attr('cy', ypos)
                   .attr('r', rad)
+                  .attr('ng-mouseover', 'ctrl.circleHover()')
+                  .attr('ng-mousedown','ctrl.circlePress()')
+                  .attr('data-title',function(d){return d.title})
+                  .attr('data-price',function(d){return d.price})
+                  .attr('data-cflow',function(d){return d.cash_flow})
+                  .attr('href',function(d){return d.href})
                   .attr('stroke', 'black')
                   .attr('stroke-width','2')
                   .attr('fill', function(d){
                     return color(colorval(d));});
 
-                  // svg.selectAll('div.text')
-                  //   .data(g)
-                  //   .enter()
-                  //   .append('div')
-                  //   .append('h2')
-                  //   .text(function(d){
-                  //     return d.title+'\nPrice: '+d.price+'\nCash Flow: '+d.cash_flow
-                  //   })
-                  //   .attr('x',function(d){return xpos(d)-rad(d)})
-                  //   .attr('y',function(d){return ypos(d)-rad(d)})
-                  //   .attr('class','text')
-                  //
-                  //   ;
+
 
                   svg.append('g')
                   .attr('transform','translate(0,'+(grid.height-margin)+')')
-                  .attr('class','axis')
+                  .attr('class','axis xaxis')
                   .call(xaxis);
 
                   svg.append('g')
                     .attr('transform','translate('+margin+',0)')
-                    .attr('class','axis')
+                    .attr('class','axis yaxis')
                     .call(yaxis);
 
                   // ** Update data section (Called from the onclick)
 
+                  //User Input
 
-                  // updatedata = function() {
-                  //
-                  //
-                  //
-                  //     // Select the section we want to apply our changes to
-                  //     var svg = d3.select("body").transition();
-                  //
-                  //     // Make the changes
-                  //         svg.selectAll('circle')
-                  //       .data(g)
-                  //       .attr('cx', xpos)
-                  //       .attr('cy', ypos)
-                  //       .attr('r', rad)
-                  //       .attr('stroke', 'black')
-                  //       .attr('stroke-width','2')
-                  //       .attr('fill', function(d){
-                  //         return color(colorval(d));})
-                  //         };
+                  self.circleHover = function(){
+                    console.log('hover');
+                  };
+
+                  self.circlePress = function(){
+                    console.log('press');
+                  }
+
+                  self.submit=function(){
+                    console.log('Max is now '+self.cutoff);
+                    console.log('new range is now');
+                    scale= {
+                      x: d3.scale.linear()
+                      .domain([self.min, self.cutoff])
+                      .range([margin, grid.width-margin]),
+                      y: d3.scale.linear()
+                      .domain([0, grid.maxY])
+                      .range([grid.height-margin, margin])
+                    };
+
+                    var xaxis = d3.svg.axis()
+                      .scale(scale.x)
+                      .orient('bottom')
+                      ;
+
+                    var yaxis = d3.svg.axis()
+                      .scale(scale.y)
+                      .orient('left')
+                      ;
+
+                    svg.selectAll('circle')
+                      .data(g)
+                      .attr('cx', xpos)
+                      .attr('cy', ypos);
+
+                    svg.selectAll('.xaxis').call(xaxis);
+                    svg.selectAll('.yaxis').call(yaxis);
+
+                  };
+
 
 
               })

@@ -264,3 +264,21 @@ textarea {
         page-break-after: avoid;
     }
 }
+
+
+body {
+    margin: 3em;
+}
+
+input {
+    margin: 0 2em 1em 0;
+}
+
+span.range {
+    display: inline-block;
+    margin: 0 2em 0 0;
+}
+
+.input {
+    margin: 2em 0;
+}
